@@ -36,11 +36,11 @@ spec:
         - name: ansible-logs
           mountPath: "/runner/artifacts"
     ansible:
+      ansiblePort: 22
+      ansibleUser: root
       ansibleVarsFrom:
         - secretRef:
             name: redhat-registry
-      ansiblePort: 22
-      ansibleUser: root
       ansibleVars:
         ctlplane_dns_nameservers:
           - 192.168.58.101
