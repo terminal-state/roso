@@ -36,11 +36,11 @@ spec:
     #    - name: ansible-logs
     #      mountPath: "/runner/artifacts"
     ansible:
+      ansiblePort: 22
+      ansibleUser: root
       ansibleVarsFrom:
         - secretRef:
             name: redhat-registry
-      ansiblePort: 22
-      ansibleUser: root
       ansibleVars:
         ctlplane_dns_nameservers:
           - 192.168.58.101
@@ -53,11 +53,8 @@ spec:
           - storagemgmt
         edpm_network_config_os_net_config_options: "--cleanup"
         edpm_network_config_nmstate: false
-        registry_username: "<USERNAME>"
-        registry_password: "<PASSWORD>"
         edpm_bootstrap_command: |
           podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io
-          echo "podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io"
         edpm_bootstrap_network_resolvconf_update: true
         ctlplane_dns_nameservers:
           - 192.168.58.101
