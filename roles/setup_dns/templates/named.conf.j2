@@ -1,0 +1,36 @@
+options {
+    listen-on port 53 { 127.0.0.1; {{ dns_server }}; };
+    directory "/var/named";
+    dump-file "/var/named/data/cache_dump.db";
+    statistics-file "/var/named/data/named_stats.txt";
+    memstatistics-file "/var/named/data/named_mem_stats.txt";
+    allow-query { localhost; {{ network }}/{{ subnet_cidr }}; 192.168.55.0/24; };
+    recursion yes;
+    forwarders {
+    {% for forwarder in dns_forwarders %}
+        {{ forwarder }};
+    {% endfor %}
+    };
+};
+
+zone "{{ domain }}" IN {
+    type master;
+    file "{{ domain }}.zone";
+};
+
+zone "0.0.127.in-addr.arpa" IN {
+    type master;
+    file "named.localhost";
+};
+
+zone "{{ network.split('.')[2] }}.{{ network.split('.')[1] }}.{{ network.split('.')[0] }}.in-addr.arpa" IN {
+    type master;
+    file "reverse.{{ network.split('.')[2] }}.{{ network.split('.')[1] }}.{{ network.split('.')[0] }}.in-addr.arpa";
+};
+
+logging {
+    channel default_debug {
+        file "data/named.run";
+        severity dynamic;
+    };
+};

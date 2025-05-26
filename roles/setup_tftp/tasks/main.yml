@@ -1,0 +1,51 @@
+---
+# tasks file for /etc/ansible/roles/setup_tftp
+- name: Install tftp-server package
+  yum:
+    name: tftp-server
+    state: present
+  async: 300
+  poll: 0
+  become: yes
+
+- name: Create TFTP root directory
+  file:
+    path: /var/lib/tftpboot
+    state: directory
+    owner: nobody
+    group: nobody
+    mode: '0755'
+  become: yes
+
+- name: Copy PXE boot files from RHEL 9.4 DVD to TFTP root
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: yes
+    mode: '0644'
+  loop:
+    - { src: '/var/os/rhel{{ rhel_os_version }}/images/pxeboot/vmlinuz', dest: '/var/lib/tftpboot/vmlinuz' }
+    - { src: '/var/os/rhel{{ rhel_os_version }}/images/pxeboot/initrd.img', dest: '/var/lib/tftpboot/initrd.img' }
+  become: yes
+
+
+#- name: Open TFTP port in firewalld
+#  firewalld:
+#    service: tftp
+#    permanent: true
+#    state: enabled
+#    immediate: true
+
+- name: Ensure tftp.socket is enabled and started
+  systemd:
+    name: tftp.socket
+    enabled: true
+    state: started
+  become: yes
+
+- name: Ensure tftp service is enabled (optional)
+  systemd:
+    name: tftp.service
+    enabled: true
+    state: started
+  become: yes

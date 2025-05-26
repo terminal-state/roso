@@ -1,0 +1,101 @@
+- name: Create required directories
+  ansible.builtin.file:
+    path: "/var/www/html/rhel{{ rhel_os_version }}/rhel-9-for-x86_64-baseos-rpms/"
+    state: directory
+    mode: '0755'
+
+- name: Create required directories
+  ansible.builtin.file:
+    path: "/var/www/html/kickstarts"
+    state: directory
+    mode: '0755'
+
+- name: Ensure /var/os/rhel{{ rhel_os_version }} directory exists
+  file:
+    path: "/var/os/rhel{{ rhel_os_version }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy RPM-GPG keys
+  ansible.builtin.copy:
+    src: "/var/os/rhel{{ rhel_os_version }}/RPM-GPG-KEY-redhat-beta"
+    dest: "/var/www/html/rhel{{ rhel_os_version }}/rhel-9-for-x86_64-baseos-rpms/RPM-GPG-KEY-redhat-beta"
+    remote_src: yes
+
+- name: Copy RPM-GPG release key
+  ansible.builtin.copy:
+    src: "/var/os/rhel{{ rhel_os_version }}/RPM-GPG-KEY-redhat-release"
+    dest: "/var/www/html/rhel{{ rhel_os_version }}/rhel-9-for-x86_64-baseos-rpms/RPM-GPG-KEY-redhat-release"
+    remote_src: yes
+
+- name: Copy EFI, images, and isolinux directories
+  ansible.builtin.command:
+    cmd: "cp -r /var/os/rhel{{ rhel_os_version }}/EFI /var/os/rhel{{ rhel_os_version }}/images /var/os/rhel{{ rhel_os_version }}/isolinux /var/www/html/rhel{{ rhel_os_version }}/rhel-9-for-x86_64-baseos-rpms/"
+  async: 30
+  poll: 0
+
+- name: Install grub2-efi-x64 package
+  ansible.builtin.yum:
+    name: grub2-efi-x64
+    state: present
+  async: 30
+  poll: 0
+
+- name: Create TFTP grub directory
+  ansible.builtin.file:
+    path: "/var/lib/tftpboot/grub/"
+    state: directory
+    mode: '0755'
+
+- name: Copy grubx64.efi to TFTP grub directory
+  ansible.builtin.copy:
+    src: "/boot/efi/EFI/redhat/grubx64.efi"
+    dest: "/var/lib/tftpboot/grub/grubx64.efi"
+    remote_src: yes
+
+- name: Create grub config for each host in hci_data_plane
+  ansible.builtin.template:
+    src: grub.cfg.j2
+    dest: "/var/lib/tftpboot/grub/grub.cfg-01-{{ item.mac_address | replace(':', '-') }}"
+    mode: '0644'
+  loop: "{{ hostvars[groups['hci_data_plane'][0]].hosts }}"
+  loop_control:
+    loop_var: item
+
+- name: Create grub config for each host in ocp_control_plane
+  ansible.builtin.template:
+    src: grub.ocp.cfg.j2
+    dest: "/var/lib/tftpboot/grub/grub.cfg-01-{{ item.mac_address | replace(':', '-') }}"
+    mode: '0644'
+  loop: "{{ hostvars[groups['ocp_control_plane'][0]].hosts }}"
+  loop_control:
+    loop_var: item
+
+- name: Create kickstart files for each host in hci_data_plane
+  ansible.builtin.template:
+    src: kickstart.ks.j2
+    dest: "/var/www/html/kickstarts/{{ item.name }}.ks"
+    mode: '0644'
+  loop: "{{ hostvars[groups['hci_data_plane'][0]].hosts }}"
+  loop_control:
+    loop_var: item
+
+- name: Set SELinux context for TFTP files
+  ansible.builtin.command:
+    cmd: "semanage fcontext -a -t tftpdir_t '/var/lib/tftpboot(/.*)?'"
+  become: yes
+
+- name: Restore SELinux context for TFTP files
+  ansible.builtin.command:
+    cmd: "restorecon -Rv /var/lib/tftpboot/"
+  become: yes
+
+- name: Set SELinux context for HTTP files
+  ansible.builtin.command:
+    cmd: "semanage fcontext -a -t httpd_sys_content_t '/var/www/html(/.*)?'"
+  become: yes
+
+- name: Restore SELinux context for HTTP files
+  ansible.builtin.command:
+    cmd: "restorecon -Rv /var/www/html/"
+  become: yes

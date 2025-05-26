@@ -1,0 +1,32 @@
+# Global configuration
+option architecture-type code 93 = unsigned integer 16;  # Support for UEFI PXE clients
+default-lease-time 600;
+max-lease-time 7200;
+authoritative;
+always-broadcast on;
+
+# Subnet configuration
+subnet {{ network }} netmask {{ subnet }} {
+    range {{ dhcp_range[0] }} {{ dhcp_range[1] }};
+    option domain-name-servers {{ dns_server }};
+#    option domain-search {{ domain }};
+    option routers {{ default_gateway }};
+    option subnet-mask {{ subnet }};
+    option broadcast-address {{ broadcast }};
+    next-server {{ tftp_server }};
+
+{% for host in hostvars[groups['hci_data_plane'][0]]['hosts'] %}
+    host {{ host.name }} { hardware ethernet {{ host.mac_address }}; fixed-address {{ host.ip_address }}; }
+{% endfor %}
+
+{% for host in hostvars[groups['ocp_control_plane'][0]]['hosts'] %}
+    host {{ host.name }} { hardware ethernet {{ host.mac_address }}; fixed-address {{ host.ip_address }}; }
+{% endfor %}
+
+    # Define PXE bootloader based on client architecture
+    if option architecture-type = 00:07 {
+        filename "grub/grubx64.efi";  # UEFI PXE bootloader
+    } else {
+        filename "pxelinux.0";   # Legacy BIOS PXE bootloader
+    }
+}

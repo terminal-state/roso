@@ -1,0 +1,22 @@
+---
+- name: Add OpenShift DNS entries
+  lineinfile:
+    path: /var/named/{{ domain }}.zone
+    line: "{{ item }}"
+  with_items:
+    - "api.{{ cluster_name }}.{{ domain }} IN A {{ api_ip }}"
+    - "*.apps.{{ cluster_name }}.{{ domain }} IN A {{ ingress_ip }}"
+
+- name: Update DNS zone serial dynamically
+  replace:
+    path: /var/named/{{ domain }}.zone
+    regexp: '(\d{10}) ; Serial'
+    replace: "{{ new_serial }} ; Serial"
+  vars:
+    new_serial: "{{ lookup('pipe', 'date +%Y%m%d%s') }}01"
+
+- name: Restart DNS service
+  service:
+    name: named
+    state: restarted
+    enabled: true

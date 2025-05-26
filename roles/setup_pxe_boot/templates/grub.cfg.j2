@@ -1,0 +1,11 @@
+set timeout=5
+set default=0
+
+menuentry 'Install RHEL9.4 for {{ item.name }}' {
+    linuxefi /vmlinuz ip=dhcp inst.ks=http://{{ http_server }}/kickstarts/{{ item.name }}.ks
+    initrdefi /initrd.img
+}
+
+menuentry 'Boot from local disk' {
+    exit
+}

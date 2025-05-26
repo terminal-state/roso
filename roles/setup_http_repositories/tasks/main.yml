@@ -1,0 +1,57 @@
+---
+# tasks file for /etc/ansible/roles/setup_httpd
+
+- name: Install required packages for repository management asynchronously
+  ansible.builtin.yum:
+    name:
+      - dnf-utils
+      - createrepo
+    state: present
+  async: 600
+  poll: 0
+  register: yum_async_result
+
+- name: Ensure required directories exist
+  ansible.builtin.file:
+    path: "/var/www/html/rhel{{ rhel_os_version }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Sync only the latest versions of repositories
+  ansible.builtin.command:
+    cmd: >
+      reposync
+      --repoid={{ item }}
+      --download-metadata
+      --download-path=/var/www/html/rhel{{ rhel_os_version }}
+      --newest-only
+  with_items: "{{ repos }}"
+  register: reposync_results
+  changed_when: reposync_results.rc == 0
+  failed_when: reposync_results.rc != 0
+  tags:
+    - sync
+
+- name: Set SELinux context for the repository directory
+  ansible.builtin.command:
+    cmd: semanage fcontext -a -t httpd_sys_content_t "/var/www/html/rhel{{ rhel_os_version }}(/.*)?"
+  register: selinux_context_set
+  changed_when: selinux_context_set.stdout.find("already defined") == -1
+  failed_when: selinux_context_set.rc != 0 and selinux_context_set.stdout.find("already defined") == -1
+
+- name: Apply SELinux context
+  ansible.builtin.command:
+    cmd: restorecon -R /var/www/html/rhel{{ rhel_os_version }}
+  register: selinux_restorecon
+  changed_when: selinux_restorecon.rc == 0
+  failed_when: selinux_restorecon.rc != 0
+
+- name: Wait for repository management package installation to complete
+  ansible.builtin.async_status:
+    jid: "{{ yum_async_result.ansible_job_id }}"
+  register: yum_async_status
+  until: yum_async_status.finished
+  retries: 10
+  delay: 30

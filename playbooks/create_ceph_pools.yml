@@ -1,0 +1,86 @@
+- name: Create Ceph Pools Based on Device Class
+  hosts: "{{ groups['admin'] | default('mbes005') }}"  # Run on the Ceph admin node
+  become: true
+  tasks:
+
+    - name: Ensure jq is installed
+      ansible.builtin.yum:
+        name: jq
+        state: present
+
+    - name: Get SSD OSDs using jq
+      shell: ceph osd tree --format=json | jq -r '.nodes[] | select(.type=="osd" and .device_class=="ssd") | .id'
+      register: ssd_osds
+      changed_when: false
+
+    - name: Get HDD OSDs using jq
+      shell: ceph osd tree --format=json | jq -r '.nodes[] | select(.type=="osd" and .device_class=="hdd") | .id'
+      register: hdd_osds
+      changed_when: false
+
+    - name: Convert SSD OSDs output into list
+      set_fact:
+        ssd_osds_list: "{{ ssd_osds.stdout_lines }}"
+
+    - name: Convert HDD OSDs output into list
+      set_fact:
+        hdd_osds_list: "{{ hdd_osds.stdout_lines }}"
+
+    - name: Create Ceph pool for SSD storage
+      command: ceph osd pool create ssd_pool 128 128 replicated
+      when: ssd_osds_list | length > 0
+
+    - name: Create Ceph pool for Volumes
+      command: ceph osd pool create volumes 128 128 replicated
+      when: ssd_osds_list | length > 0
+
+    - name: Create Ceph pool for Volume_Snapshots
+      command: ceph osd pool create volumes_snap 128 128 replicated
+      when: ssd_osds_list | length > 0
+
+    - name: Create Ceph pool for Images
+      command: ceph osd pool create images 128 128 replicated
+      when: ssd_osds_list | length > 0
+
+    - name: Create Ceph pool for Virtual Machines
+      command: ceph osd pool create vms 128 128 replicated
+      when: ssd_osds_list | length > 0
+
+    - name: Create Default Ceph Block Pool (RBD)
+      command: ceph osd pool create rbd 128 128 replicated
+      when: ssd_osds_list | length > 0
+
+    - name: Enable the default RBD pool
+      command: ceph osd pool application enable rbd rbd
+
+    - name: Configure Ceph default RBD pool
+      command: ceph config set mon mon_allow_pool_delete true
+
+    - name: Create CRUSH rule for SSD OSDs
+      command: ceph osd crush rule create-replicated ssd_rule default host ssd
+      when: ssd_osds_list | length > 0
+
+    - name: Create CRUSH rule for HDD OSDs
+      command: ceph osd crush rule create-replicated hdd_rule default host hdd
+      when: hdd_osds_list | length > 0
+
+    - name: Assign images pool to SSD CRUSH rule
+      command: ceph osd pool set images crush_rule ssd_rule
+      when: ssd_osds_list | length > 0
+
+    - name: Assign vms  pool to SSD CRUSH rule
+      command: ceph osd pool set vms crush_rule ssd_rule
+      when: ssd_osds_list | length > 0
+
+    - name: Assign rbd pool to SSD CRUSH rule
+      command: ceph osd pool set rbd crush_rule ssd_rule
+      when: ssd_osds_list | length > 0
+
+    - name: Assign Volume pool to HDD CRUSH rule
+      command: ceph osd pool set volumes crush_rule hdd_rule
+      when: hdd_osds_list | length > 0
+
+    - name: Assign Volume Snapshots pool to HDD CRUSH rule
+      command: ceph osd pool set volumes_snap crush_rule hdd_rule
+      when: hdd_osds_list | length > 0
+

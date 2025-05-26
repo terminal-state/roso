@@ -1,0 +1,27 @@
+# tasks/main.yml
+---
+- name: Install haproxy package
+  ansible.builtin.yum:
+    name: haproxy
+    state: latest
+  notify: restart haproxy
+
+- name: Backup existing haproxy.cfg file if it exists
+  ansible.builtin.command:
+    cmd: cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
+  args:
+    creates: /etc/haproxy/haproxy.cfg.bak
+
+- name: Configure haproxy for HTTPS load balancing
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: '0644'
+  notify: restart haproxy
+
+- name: Enable and start haproxy service
+  ansible.builtin.service:
+    name: haproxy
+    state: started
+    enabled: yes
+

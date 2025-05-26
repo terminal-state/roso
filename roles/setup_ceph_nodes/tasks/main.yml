@@ -1,0 +1,96 @@
+---
+- name: Retrieve Ceph orchestrator public SSH key
+  ansible.builtin.command: ceph cephadm get-pub-key
+  delegate_to: "{{ bootstrap_host }}"
+  register: ceph_public_key
+  run_once: true
+
+- name: Distribute Ceph orchestrator public SSH key
+  ansible.builtin.lineinfile:
+    path: /root/.ssh/authorized_keys
+    line: "{{ ceph_public_key.stdout }}"
+    create: yes
+    state: present
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Create SSH configuration file on all hosts
+  ansible.builtin.blockinfile:
+    path: /root/.ssh/config
+    block: |
+      Host *
+        User root
+        StrictHostKeyChecking no
+        UserKnownHostsFile /dev/null
+        ConnectTimeout=30
+        IdentityFile /root/.ssh/cephadm_private_key
+    create: yes
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Retrieve Ceph orchestrator private SSH key
+  ansible.builtin.command: ceph config-key get mgr/cephadm/ssh_identity_key
+  delegate_to: "{{ bootstrap_host }}"
+  register: ceph_private_key
+  run_once: true
+
+- name: Distribute Ceph orchestrator private SSH key
+  ansible.builtin.copy:
+    content: "{{ ceph_private_key.stdout }}"
+    dest: /root/.ssh/cephadm_private_key
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Add hosts to the Ceph cluster using public IP
+  ansible.builtin.command:
+    cmd: >
+      ceph orch host add {{ item.name }} {{ item.storage_ip_address }}
+  with_items: "{{ hostvars[bootstrap_host]['hosts'] }}"
+  delegate_to: "{{ bootstrap_host }}"
+  run_once: true
+  tags:
+    - bootstrap
+  ignore_errors: yes
+
+- name: Verify Ceph hosts
+  command: ceph orch host ls
+  delegate_to: "{{ bootstrap_host }}"
+  run_once: true
+  register: ceph_hosts
+  tags:
+    - verify
+  ignore_errors: yes
+
+- name: Display Ceph hosts
+  debug:
+    msg: "{{ ceph_hosts.stdout_lines }}"
+  tags:
+    - verify
+
+- name: Apply MON placement using hostnames from Ceph cluster
+  command: ceph orch apply mon --placement="{{ mon_nodes }}"
+  delegate_to: "{{ bootstrap_host }}"
+  run_once: true
+  vars:
+    mon_nodes: "{{ groups['hci_data_plane3'] | join(',') }}"
+  tags:
+    - configure
+
+- name: Verify Ceph MONs
+  command: ceph mon dump
+  delegate_to: "{{ bootstrap_host }}"
+  run_once: true
+  register: mon_status
+  tags:
+    - verify
+  ignore_errors: yes
+
+- name: Display MON status
+  debug:
+    msg: "{{ mon_status.stdout_lines }}"
+  tags:
+    - verify
+

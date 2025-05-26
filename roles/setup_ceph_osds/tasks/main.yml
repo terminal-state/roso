@@ -1,0 +1,11 @@
+---
+- name: Loop through hosts and add OSDs
+  include_tasks: add_osds.yml
+  vars:
+    osd_host: "{{ item.name }}"
+    osd_list: "{{ item.osds }}"
+    osd_ip: "{{ item.storagemgmt_ip_address }}" 
+  loop: "{{ hostvars[bootstrap_host]['hosts'] }}"
+  loop_control:
+    label: "{{ item.name }}"
+  run_once: true

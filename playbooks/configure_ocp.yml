@@ -1,0 +1,4 @@
+- name: Setup OCP Cluster
+  hosts: ocp_control_plane
+  roles:
+    - setup_ocp_prereqs

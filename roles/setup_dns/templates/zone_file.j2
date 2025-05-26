@@ -1,0 +1,43 @@
+$TTL 86400
+@   IN  SOA ns1.imlab.priv. admin.imlab.priv. (
+        {{ ansible_date_time.epoch }} ; Serial
+        3600       ; Refresh
+        1800       ; Retry
+        1209600    ; Expire
+        86400 )    ; Minimum TTL
+
+    IN  NS  ns1.imlab.priv.
+
+; Name Server
+ns1 IN  A   {{ dns_server }}
+
+; Record for the current host running the task
+{{ inventory_hostname }} IN  A   {{ hostvars[inventory_hostname]['ansible_host'] }}
+
+; A Records for all hosts in hci_data_plane
+{% for host in hostvars[groups['hci_data_plane'][0]]['hosts'] %}
+{{ host.name }} IN  A   {{ host.ip_address }}
+{% endfor %}
+
+; A Records for all ceph hosts interfaaces in hci_data_plane
+{% for host in hostvars[groups['hci_data_plane'][0]]['hosts'] %}
+{{ host.name }}-ceph IN  A   {{ host.storagemgmt_ip_address }}
+{% endfor %}
+
+; A Records for all storage hosts interfaaces in hci_data_plane
+{% for host in hostvars[groups['hci_data_plane'][0]]['hosts'] %}
+{{ host.name }}-storage IN  A   {{ host.storage_ip_address }}
+{% endfor %}
+
+; A Records for all hosts in ocp_control_plane
+{% for host in hostvars[groups['ocp_control_plane'][0]]['hosts'] %}
+{{ host.name }} IN  A   {{ host.ip_address }}
+{% endfor %}
+
+; Openshift Cluster Records
+api.{{ cluster_name }} IN  A   {{ api_ip }}
+api-int.{{ cluster_name }} IN  A   {{ api_ip }}
+*.apps.{{ cluster_name }} IN  A   {{ ingress_ip }}
+
+; Optional Wildcard Record
+;*   IN  A   {{ dns_server }}

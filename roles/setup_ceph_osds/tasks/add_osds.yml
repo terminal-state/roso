@@ -1,0 +1,12 @@
+- name: Add OSDs for the host
+  become: true
+  command: ceph orch daemon add osd {{ osd_host }}:{{ osd }}
+  loop: "{{ osd_list }}"
+  loop_control:
+    loop_var: osd
+    label: "{{ osd_ip }}:{{ osd }}"
+  delegate_to: "{{ bootstrap_host }}"
+
+- name: Pause for a few seconds to allow Ceph to process the OSD addition
+  pause:
+    seconds: 15

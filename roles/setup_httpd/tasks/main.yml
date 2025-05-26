@@ -1,0 +1,33 @@
+
+---
+# tasks file for /etc/ansible/roles/setup_httpd
+
+- name: Install required httpd packages asynchronously
+  ansible.builtin.yum:
+    name: httpd
+    state: present
+  async: 600           # Allow up to 10 minutes for the installation
+  poll: 0              # Do not wait for the task to finish
+  register: yum_async_result
+
+- name: Wait for httpd package installation to complete
+  ansible.builtin.async_status:
+    jid: "{{ yum_async_result.ansible_job_id }}"
+  register: yum_async_status
+  until: yum_async_status.finished
+  retries: 100           # Retry up to 10 times
+  delay: 3            # Wait 30 seconds between retries
+
+- name: Ensure httpd service is enabled and started
+  ansible.builtin.service:
+    name: httpd
+    enabled: true
+    state: started
+
+- name: Create directory for hosting RHEL repository
+  ansible.builtin.file:
+    path: "/var/www/html/rhel{{ rhel_os_version }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'

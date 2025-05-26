@@ -1,0 +1,4 @@
+- name: Add OSDs to Ceph cluster for all hosts
+  hosts: mbes005
+  roles:
+    - setup_ceph_osds

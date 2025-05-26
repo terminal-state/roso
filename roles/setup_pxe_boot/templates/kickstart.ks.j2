@@ -1,0 +1,153 @@
+# Kickstart configuration for {{ item.name }}
+text
+
+# System language
+lang {{ item.language | default('en_GB.UTF-8') }}
+
+# Keyboard layouts
+keyboard {{ item.keyboard | default('uk') }}
+
+# Timezone
+timezone {{ item.timezone | default('Europe/London') }} --utc
+
+# Network configuration
+network --bootproto=static --device=eno5np0 --ip={{ item.ip_address }} --netmask={{ subnet }} --gateway={{ default_gateway }} --nameserver={{ dns_server }} --hostname={{ item.name }} --onboot=yes --noipv6
+#network --bootproto=static --device=eno6np1 --vlanid={{ storagemgmt_vlanid }} --ip={{ item.storagemgmt_ip_address }} --netmask={{ subnet }} --noipv6 --nodefroute --activate --onboot=yes
+#network --bootproto=static --device=eno6np1 --vlanid={{ storage_vlanid }} --ip={{ item.storage_ip_address }} --netmask={{ subnet }} --noipv6 --nodefroute --activate --onboot=yes
+#network --bootproto=static --device=eno6np1 --vlanid={{ tenant_vlanid }} --ip={{ item.tenant_ip_address }} --netmask={{ subnet }} --noipv6 --nodefroute --activate --onboot=yes
+#network --bootproto=static --device=eno6np1 --vlanid={{ ctlplane_vlanid }} --ip={{ item.ctlplane_ip_address }} --netmask={{ subnet }} --noipv6 --nodefroute --activate --onboot=yes
+
+network --device=eno6np1 --onboot=no
+network --device=ens1f0np0 --onboot=no
+network --device=ens1f1np1 --onboot=no
+
+# Root password
+rootpw {{ item.root_password | default('123') }}
+
+# Install OS
+url --url http://{{ http_server }}/rhel{{ rhel_os_version }}/rhel-9-for-x86_64-baseos-rpms
+
+# Specify Minimal Installation
+%packages
+@Minimal Install
+podman
+chrony
+openssh-clients
+openssh-server
+%end
+
+# Add Additional repositories
+repo --name="BaseOS-local" --baseurl=http://{{ http_server }}/rhel{{ rhel_os_version }}/rhel-9-for-x86_64-baseos-rpms --install
+repo --name="AppStream-local" --baseurl=http://{{ http_server }}/rhel{{ rhel_os_version }}/rhel-9-for-x86_64-appstream-rpms --install
+repo --name="Ceph-Tools" --baseurl=http://{{ http_server }}/rhel{{ rhel_os_version }}/rhceph-8-tools-for-rhel-9-x86_64-rpms --install
+repo --name="RHOSO-18.0" --baseurl=http://{{ http_server }}/rhel{{ rhel_os_version }}/rhoso-18.0-for-rhel-9-x86_64-rpms --install
+repo --name="RHOSO-EDPM-1.0" --baseurl=http://{{ http_server }}/rhel{{ rhel_os_version }}/rhoso-edpm-1.0-for-rhel-9-x86_64-rpms --install
+repo --name="RHOSO-Podified-1.0" --baseurl=http://{{ http_server }}/rhel{{ rhel_os_version }}/rhoso-podified-1.0-for-rhel-9-x86_64-rpms --install
+repo --name="RHOSO-Tools-18" --baseurl=http://{{ http_server }}/rhel{{ rhel_os_version }}/rhoso-tools-18-for-rhel-9-x86_64-rpms --install
+repo --name="FastDataPath" --baseurl=http://{{ http_server }}/rhel{{ rhel_os_version }}/fast-datapath-for-rhel-9-x86_64-rpms --install
+
+
+# Bootloader
+bootloader --location=mbr
+
+{% if item.primary_drive is defined %}
+# Clear the drive
+clearpart --all --initlabel --drives={{ item.primary_drive }}
+ignoredisk --only-use={{ item.primary_drive }}
+
+# EFI System Partition (non-RAID)
+part /boot/efi --fstype=vfat --size=200 --ondrive={{ item.primary_drive }}
+
+# Partition for LVM
+part pv.01 --size=1 --grow --ondrive={{ item.primary_drive }}
+
+# Create a Volume Group
+volgroup {{ vg_name }} pv.01
+
+{% else %}
+# Clear the two NVMe disks and set up RAID
+clearpart --all --initlabel --drives={{ item.mirrored_drives[0] }},{{ item.mirrored_drives[1] }}
+ignoredisk --only-use={{ item.mirrored_drives[0] }},{{ item.mirrored_drives[1] }}
+
+# EFI System Partition (non-RAID)
+part /boot/efi --fstype=vfat --size=200 --ondrive={{ item.mirrored_drives[0] }}
+
+# Create the RAID devices
+# -- raid part for boot --
+part raid.11 --size 1024 --asprimary --ondrive={{ item.mirrored_drives[0] }}
+part raid.12 --size 1024 --asprimary --ondrive={{ item.mirrored_drives[1] }}
+# -- raid part for pv.1 --
+part raid.31 --size=1 --grow --ondrive={{ item.mirrored_drives[0] }}
+part raid.32 --size=1 --grow --ondrive={{ item.mirrored_drives[1] }}
+# -- raid part for root --
+part raid.21 --size=20480 --ondrive={{ item.mirrored_drives[0] }}
+part raid.22 --size=20480 --ondrive={{ item.mirrored_drives[1] }}
+# -- raid part for swap --
+part raid.41 --size=16384 --ondrive={{ item.mirrored_drives[0] }}
+part raid.42 --size=16384 --ondrive={{ item.mirrored_drives[1] }}
+
+# Raid device creation
+raid /boot --fstype xfs --device boot --level=RAID1 raid.11 raid.12
+raid pv.01 --fstype xfs --device pv.01 --level=RAID1 raid.31 raid.32
+raid / --fstype xfs --device root --level=RAID1 raid.21 raid.22
+raid swap --fstype swap --device swap --level=RAID1 raid.41 raid.42
+
+# Create a Volume Group on the RAID
+volgroup {{ vg_name }} pv.01
+{% endif %}
+
+# Create Logical Volumes
+logvol /home --fstype=xfs --name=home --vgname=vg01 --size=20480
+logvol /usr  --fstype=xfs --name=usr --vgname=vg01 --size=10240
+logvol /var  --fstype=xfs --name=var --vgname=vg01 --size=10240
+logvol /var/log  --fstype=xfs --name=var_log --vgname=vg01 --size=10240
+logvol /tmp  --fstype=xfs --name=tmp --vgname=vg01 --size=5120
+
+# Disable SELinux & Firewall
+selinux --enforcing
+firewall --disabled
+
+# Post-installation script to start sshd and add a public key
+%post
+# Enable and start the SSH service
+systemctl enable sshd
+systemctl start sshd
+
+# Install RH GPGKEY
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+nmcli con delete eno6np1 || true
+
+cat <<EOF > /etc/NetworkManager/conf.d/unmanaged-eno6np1.conf
+[keyfile]
+unmanaged-devices=interface-name:eno6np1
+EOF
+
+# Reload NetworkManager to apply unmanaged setting
+systemctl reload NetworkManager
+
+# DNS Workaround
+cat <<EOF >> /etc/hosts
+52.2.169.250    registry.redhat.io
+95.100.104.14	access.redhat.com
+35.173.153.15	quay.io
+2.19.117.103	cdn01.quay.io
+EOF
+
+
+# Create the .ssh directory for root and set permissions
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+
+# Add your public key to authorized_keys
+#
+echo "{{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}" > /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/authorized_keys
+
+# Ensure the hugetlbfs group exists
+groupadd -r hugetlbfs || echo "hugetlbfs group already exists"
+
+%end
+
+# Reboot after installation
+reboot

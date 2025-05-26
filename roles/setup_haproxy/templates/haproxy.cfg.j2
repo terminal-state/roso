@@ -1,0 +1,65 @@
+# Global settings
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    maxconn 2000
+    user haproxy
+    group haproxy
+    daemon
+
+# Default settings
+defaults
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    retries 3
+    timeout http-request 10s
+    timeout queue 1m
+    timeout connect 10s
+    timeout client 1m
+    timeout server 1m
+    timeout http-keep-alive 10s
+    timeout check 10s
+    maxconn 3000
+
+# Frontend for Kubernetes API
+frontend api
+    bind {{ api_ip }}:6443
+    default_backend api-backend
+
+# Backend for Kubernetes API
+backend api-backend
+    balance roundrobin
+    option httpchk GET /readyz
+    {% for host in groups['ocp_control_plane'] %}
+    server {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['ansible_host'] }}:6443 check
+    {% endfor %}
+
+# Frontend for Machine Config Server
+frontend mcs
+    bind {{ api_ip }}:22623
+    default_backend mcs-backend
+
+# Backend for Machine Config Server
+backend mcs-backend
+    balance roundrobin
+    option httpchk GET /healthz
+    {% for host in groups['ocp_control_plane'] %}
+    server {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['ansible_host'] }}:22623 check
+    {% endfor %}
+
+# Frontend for Application Ingress
+frontend ingress
+    bind {{ ingress_ip }}:80
+    bind {{ ingress_ip }}:443
+    default_backend ingress-backend
+
+# Backend for Application Ingress
+backend ingress-backend
+    balance roundrobin
+    {% for host in groups['ocp_control_plane'] %}
+    server {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['ansible_host'] }}:80 check
+    server {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['ansible_host'] }}:443 check
+    {% endfor %}
+

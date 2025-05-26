@@ -1,0 +1,75 @@
+---
+# tasks file for /etc/ansible/roles/setup_dns
+
+- name: Install named packages asynchronously
+  ansible.builtin.yum:
+    name: bind
+    state: present
+  async: 600           # Allow up to 10 minutes for the installation
+  poll: 0              # Do not wait for the task to finish
+  register: yum_async_result
+  become: true
+
+- name: Ensure named group exists
+  ansible.builtin.group:
+    name: named
+    state: present
+  become: true
+
+- name: Ensure named user exists
+  ansible.builtin.user:
+    name: named
+    group: named
+    shell: /sbin/nologin
+    system: yes
+    state: present
+  become: true
+
+- name: Configure named.conf
+  ansible.builtin.template:
+    src: named.conf.j2
+    dest: /etc/named.conf
+    owner: root
+    group: named
+    mode: '0644'
+  notify:
+    - Increment reverse zone serial number
+  become: true
+
+- name: Create zone file for {{ domain }}
+  ansible.builtin.template:
+    src: zone_file.j2
+    dest: /var/named/{{ domain }}.zone
+    owner: named
+    group: named
+    mode: '0644'
+  notify:
+    - Increment forward zone serial number
+  become: true
+
+- name: Generate reverse DNS zone file
+  template:
+    src: reverse_zone.j2
+    dest: /var/named/reverse.{{ network.split('.')[2] }}.{{ network.split('.')[1] }}.{{ network.split('.')[0] }}.in-addr.arpa
+    owner: root
+    group: named
+    mode: '0644'
+  notify:
+    - Increment reverse zone serial number
+  become: true
+
+- name: Ensure named service is enabled and started
+  ansible.builtin.service:
+    name: named
+    enabled: true
+    state: restarted
+  become: true
+
+- name: Wait for package installation to complete
+  ansible.builtin.async_status:
+    jid: "{{ yum_async_result.ansible_job_id }}"
+  register: yum_async_status
+  until: yum_async_status.finished
+  retries: 100          # Retry up to 10 times
+  delay: 3             # Wait 30 seconds between retries
+

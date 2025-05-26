@@ -1,0 +1,88 @@
+---
+# tasks file for bootstrapping Ceph orchestrator
+- name: Find all .repo files in /etc/yum.repos.d/
+  ansible.builtin.find:
+    paths: /etc/yum.repos.d/
+    patterns: '*.repo'
+    file_type: file
+  register: repo_files
+
+- name: Ensure GPG checking and add GPG key to all .repo files
+  ansible.builtin.blockinfile:
+    path: "{{ item.path }}"
+    block: |
+      gpgcheck=1
+      gpgkey=http://{{ http_server }}/rhel9.4/rhel-9-for-x86_64-baseos-rpms/RPM-GPG-KEY-redhat-release
+    insertafter: '^baseurl='
+  with_items: "{{ repo_files.files }}"
+
+- name: Ensure required packages are installed
+  yum:
+    name:
+      - cephadm
+      - ceph-common
+      - podman
+    state: present
+
+- name: Load registry credentials
+  ansible.builtin.include_vars:
+    file: registry_credentials.yml
+    name: vault_vars
+
+- name: Create JSON file for Ceph orchestrator
+  copy:
+    dest: /etc/containers/registries.conf.d/ceph-registry-login.json
+    content: |
+      {
+        "url": "registry.redhat.io",
+        "username": "{{ vault_vars.registry_username }}",
+        "password": "{{ vault_vars.registry_password }}"
+      }
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Bootstrap Ceph orchestrator on the public network
+  command: >
+    cephadm bootstrap
+    --mon-ip {{ hostvars[bootstrap_host]['hosts'] | selectattr('name', 'equalto', bootstrap_host) | map(attribute='storage_ip_address') | first }}
+    --cluster-network "{{ storagemgmt_network }}/24"
+    --registry-json /etc/containers/registries.conf.d/ceph-registry-login.json
+  when: inventory_hostname == bootstrap_host
+  tags:
+    - bootstrap
+
+- name: Change Ceph dashboard admin password using cephadm
+  ansible.builtin.shell: |
+    echo '{{ ceph_admin_password }}' | cephadm shell -- ceph dashboard set-login-credentials admin -i -
+  become: true
+  async: 45
+  poll: 5
+  when: inventory_hostname == bootstrap_host
+  ignore_errors: true
+  tags:
+    - bootstrap
+
+- name: Retrieve Ceph orchestrator public SSH key
+  ansible.builtin.command: ceph cephadm get-pub-key
+  delegate_to: "{{ bootstrap_host }}"
+  register: ceph_public_key
+  run_once: true
+
+- name: Distribute Ceph orchestrator public SSH key
+  ansible.builtin.lineinfile:
+    path: /root/.ssh/authorized_keys
+    line: "{{ ceph_public_key.stdout }}"
+    create: yes
+    state: present
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Configure Ceph MONs to use public network
+  command: ceph config set mon public_network 192.168.59.0/24
+  delegate_to: "{{ bootstrap_host }}"
+  run_once: true
+  tags:
+    - configure
+

@@ -1,0 +1,19 @@
+# Use public servers from the pool
+{% for ntp_source in ntp_sources %}
+server {{ ntp_source }} iburst
+{% endfor %}
+
+# Local clock fallback if no NTP servers are reachable
+local stratum 10
+
+# Allow clients on the local network to query the NTP server
+allow {{ network }}/{{ subnet_cidr }}
+
+# Drift file location
+driftfile /var/lib/chrony/drift
+
+# Log file location
+logdir /var/log/chrony
+
+# Specify a keyfile for authenticated NTP (optional)
+keyfile /etc/chrony.keys

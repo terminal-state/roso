@@ -1,0 +1,40 @@
+---
+# tasks file for /etc/ansible/roles/setup_dhcp
+
+- name: Install DHCP server packages
+  ansible.builtin.yum:
+    name: dhcp-server
+    state: present
+  async: 600
+  poll: 0
+  register: yum_async_result
+
+- name: Configure the DHCP server
+  ansible.builtin.template:
+    src: dhcpd.conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: Enable and start the DHCP service
+  ansible.builtin.service:
+    name: dhcpd
+    enabled: true
+    state: started
+  become: true
+
+- name: Restart DHCP service to apply changes
+  ansible.builtin.service:
+    name: dhcpd
+    state: restarted
+  become: true
+
+- name: Wait for package installation to complete
+  ansible.builtin.async_status:
+    jid: "{{ yum_async_result.ansible_job_id }}"
+  register: yum_async_status
+  until: yum_async_status.finished
+  retries: 100
+  delay: 3 

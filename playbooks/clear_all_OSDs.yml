@@ -1,0 +1,85 @@
+- name: Clean Ceph OSD Disks for Matching Host
+  hosts: hci_data_plane3
+  become: true
+  tasks:
+
+    - name: Gather existing Ceph Volume Groups
+      ansible.builtin.command: vgs --noheadings -o vg_name
+      register: ceph_vgs
+      changed_when: false
+
+    - name: Gather existing Ceph Physical Volumes
+      ansible.builtin.command: pvs --noheadings -o pv_name,vg_name
+      register: ceph_pvs
+      changed_when: false
+
+    - name: Filter only Ceph-related Volume Groups
+      ansible.builtin.set_fact:
+        ceph_volume_groups: "{{ ceph_vgs.stdout_lines | map('trim') | select('match', '^ceph-.*') | list }}"
+
+    - name: Deactivate Logical Volumes in Ceph Volume Groups
+      ansible.builtin.command: "lvchange -an {{ item }}"
+      with_items: "{{ ceph_volume_groups }}"
+      ignore_errors: true
+      when: ceph_volume_groups | length > 0
+
+    - name: Remove Ceph Volume Groups
+      ansible.builtin.command: "vgremove -y {{ item }}"
+      with_items: "{{ ceph_volume_groups }}"
+      ignore_errors: true
+      when: ceph_volume_groups | length > 0
+
+    - name: Filter only Ceph-related Physical Volumes
+      ansible.builtin.set_fact:
+        ceph_physical_volumes: "{{ ceph_pvs.stdout_lines | map('trim') | select('match', '^/dev/.* ceph-.*') | map('split', ' ') | map(attribute=0) | list }}"
+
+    - name: Remove Ceph Physical Volumes
+      ansible.builtin.command: "pvremove -y {{ item }}"
+      with_items: "{{ ceph_physical_volumes }}"
+      ignore_errors: true
+      when: ceph_physical_volumes | length > 0
+
+    # ----------------------------------------------
+    #               Disk Wiping Tasks
+    # ----------------------------------------------
+
+    - name: Extract raw disk names from Ceph Physical Volumes
+      ansible.builtin.set_fact:
+        ceph_disks: "{{ ceph_physical_volumes | map('basename') | map('regex_replace', '^([a-z]+[0-9]?)$', '/dev/\\1') | list }}"
+
+    - name: Wipe filesystem signatures from disks
+      ansible.builtin.command: "wipefs --all --force {{ item }}"
+      with_items: "{{ ceph_disks }}"
+      ignore_errors: true
+      when: ceph_disks | length > 0
+
+    - name: Overwrite the beginning of the disk with zeros
+      ansible.builtin.command: "dd if=/dev/zero of={{ item }} bs=1M count=100 oflag=direct,dsync"
+      with_items: "{{ ceph_disks }}"
+      ignore_errors: true
+      when: ceph_disks | length > 0
+
+    - name: Zap the GPT/MBR partition table
+      ansible.builtin.command: "sgdisk --zap-all {{ item }}"
+      with_items: "{{ ceph_disks }}"
+      ignore_errors: true
+      when: ceph_disks | length > 0
+
+    - name: Reload the partition table
+      ansible.builtin.command: "partprobe {{ item }}"
+      with_items: "{{ ceph_disks }}"
+      ignore_errors: true
+      when: ceph_disks | length > 0
+
+    - name: Remove partition mappings (kpartx)
+      ansible.builtin.command: "kpartx -d {{ item }}"
+      with_items: "{{ ceph_disks }}"
+      ignore_errors: true
+      when: ceph_disks | length > 0
+
+    - name: Rescan the disk
+      ansible.builtin.command: "echo 1 > /sys/block/{{ item | basename }}/device/rescan"
+      with_items: "{{ ceph_disks }}"
+      ignore_errors: true
+      when: ceph_disks | length > 0
+

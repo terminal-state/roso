@@ -1,0 +1,27 @@
+---
+- name: Increment reverse zone serial number
+  command: >
+    /usr/bin/bash -c 'file="/var/named/reverse.{{ network.split(".")[2] }}.{{ network.split(".")[1] }}.{{ network.split(".")[0] }}.in-addr.arpa";
+    old_serial=$(grep -E "Serial" $file | awk "{print \$1}");
+    new_serial=$(date +%Y%m%d00);
+    if [ "${old_serial:0:8}" == "$(date +%Y%m%d)" ]; then
+      new_serial=$((old_serial + 1));
+    fi;
+    sed -i "s/$old_serial/$new_serial/" $file'
+  notify: Restart named service
+
+- name: Increment forward zone serial number
+  command: >
+    /usr/bin/bash -c 'file="/var/named/{{ domain }}.zone";
+    old_serial=$(grep -E "Serial" $file | awk "{print \$1}");
+    new_serial=$(date +%Y%m%d00);
+    if [ "${old_serial:0:8}" == "$(date +%Y%m%d)" ]; then
+      new_serial=$((old_serial + 1));
+    fi;
+    sed -i "s/$old_serial/$new_serial/" $file'
+  notify: Restart named service
+
+- name: Restart named service
+  service:
+    name: named
+    state: restarted

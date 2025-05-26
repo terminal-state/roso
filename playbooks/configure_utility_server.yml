@@ -1,0 +1,10 @@
+- name: Setup Utility Server
+  hosts: utility_server
+  roles:
+    - setup_dhcp
+    - setup_dns
+    - setup_tftp
+    - setup_pxe_boot
+    - setup_ntp
+    - setup_httpd
+    - setup_http_repositories
