@@ -17,7 +17,18 @@ spec:
     #- tenant
     #- storagemgmt
   nodeTemplate:
-    #extraMounts:
+    extraMounts:
+      - volumes:
+          - name: nova-migration-key
+            secrets:
+              secretName: nova-migration-ssh-key
+        mounts:
+          - name: nova-migration-ssh-key
+            destination: /var/lib/openstack/config/nova
+            type: DirectoryOrCreate
+            readOnly: true
+        propagation:
+          - nova
     # - extraVolType: Ceph
     #    volumes:
     #    - name: ceph
