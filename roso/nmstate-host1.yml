@@ -1,0 +1,90 @@
+interfaces:
+- name: eno5np0
+  type: ethernet
+  state: up
+  ipv4:
+    enabled: true
+    address:
+      - ip: 192.168.56.22
+        prefix-length: 24
+
+- name: eno5np0.30
+  type: vlan
+  state: up
+  vlan:
+    base-iface: eno5np0
+    id: 30
+  ipv4:
+    enabled: true
+    address:
+      - ip: 192.168.58.22
+        prefix-length: 24
+
+- name: eno5np0.40
+  type: vlan
+  state: up
+  vlan:
+    base-iface: eno5np0
+    id: 40
+  ipv4:
+    enabled: true
+    address:
+      - ip: 192.168.57.22
+        prefix-length: 24
+
+- name: eno5np0.50
+  type: vlan
+  state: up
+  vlan:
+    base-iface: eno5np0
+    id: 50
+  ipv4:
+    enabled: true
+    address:
+      - ip: 192.168.60.22
+        prefix-length: 24
+
+- name: eno5np0.60
+  type: vlan
+  state: up
+  vlan:
+    base-iface: eno5np0
+    id: 60
+  ipv4:
+    enabled: true
+    address:
+      - ip: 192.168.59.22
+        prefix-length: 24
+
+- name: eno6np1
+  type: ethernet
+  state: down
+
+- name: ens1f0np0
+  type: ethernet
+  state: down
+
+- name: ens1f1np1
+  type: ethernet
+  state: down
+
+- name: ens4f0np0
+  type: ethernet
+  state: down
+
+- name: ens4f1np1
+  type: ethernet
+  state: down
+
+routes:
+  config:
+    - destination: 0.0.0.0/0
+      next-hop-address: 192.168.56.254
+      next-hop-interface: eno5np0
+
+dns-resolver:
+  config:
+    server:
+      - 192.168.56.21
+    search:
+      - imlab.priv

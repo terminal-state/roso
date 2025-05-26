@@ -1,0 +1,23 @@
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: vm-mgmt
+  namespace: openshift-nmstate
+spec:
+  desiredState:
+    interfaces:
+      - name: br-mgmt
+        type: linux-bridge
+        state: up
+        bridge:
+          options:
+            stp:
+              enabled: false
+          port:
+            - name: eno6np1
+        ipv4:
+          enabled: true
+          address:
+            - ip: 192.168.56.222
+              prefix-length: 24
+

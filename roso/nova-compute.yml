@@ -1,0 +1,13 @@
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: nova-compute
+  namespace: openstack
+spec:
+  label: nova-compute
+  playbook: osp.edpm.nova.compute
+  ansible:
+    vars:
+      nova_compute_virt_type: qemu
+      nova_compute_libvirt_uri: "qemu+tcp://{{ inventory_hostname }}/system"
+

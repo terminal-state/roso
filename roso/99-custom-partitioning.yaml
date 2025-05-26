@@ -1,0 +1,31 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 99-custom-partitioning
+  labels:
+    machineconfiguration.openshift.io/role: master
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      disks:
+        - device: "/dev/sda"
+          wipeTable: true
+          partitions:
+            - label: "bios-boot"
+              number: 1
+              sizeMiB: 1
+            - label: "EFI-System"
+              number: 2
+              sizeMiB: 127
+            - label: "boot"
+              number: 3
+              sizeMiB: 384
+            - label: "root"
+              number: 4
+              sizeMiB: 512000 
+            - label: "free-for-lvm"
+              number: 5
+              sizeMiB: 0
+

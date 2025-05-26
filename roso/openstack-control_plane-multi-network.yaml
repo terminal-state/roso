@@ -1,0 +1,519 @@
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack-control-plane
+  namespace: openstack
+spec:
+  #  extraMounts:
+  #- name: ceph
+  # region: default
+        #      extraVol:
+        #        - propagation:
+        #          - CinderVolume
+        #          - GlanceAPI
+        #          - NovaCompute
+        #          extraVolType: Ceph
+        #          volumes:
+        #          - name: ceph
+        #            projected:
+        #              sources:
+        #              - secret:
+        #                  name: ceph-conf-files
+        #          mounts:
+        #          - name: ceph
+        #            mountPath: "/etc/ceph"
+        #            readOnly: true
+  secret: osp-secret
+  storageClass: lvms-vg1
+  heat:
+    apiOverride:
+      route: {}
+    cnfAPIOverride:
+      route: {}
+    enabled: false
+    template:
+      databaseAccount: heat
+      databaseInstance: openstack
+      heatAPI:
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 192.168.57.115
+              spec:
+                type: LoadBalancer
+        replicas: 1
+        resources: {}
+        tls:
+          api:
+            internal: {}
+            public: {}
+      heatCfnAPI:
+        override: {}
+        replicas: 1
+        resources: {}
+        tls:
+          api:
+            internal: {}
+            public: {}
+      heatEngine:
+        replicas: 1
+        resources: {}
+      memcachedInstance: memcached
+      passwordSelectors:
+        authEncryptionKey: HeatAuthEncryptionKey
+        service: HeatPassword
+      preserveJobs: false
+      rabbitMqClusterName: rabbitmq
+      secret: osp-secret
+      serviceUser: heat
+      networkAttachments:
+      - internalapi
+  cinder: 
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      secret: osp-secret
+      cinderAPI:
+        replicas: 3
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 192.168.57.101
+              spec:
+                type: LoadBalancer
+      cinderScheduler:
+        replicas: 2
+      cinderBackup: 
+        networkAttachments:
+        - storage
+        replicas: 0 # backend needs to be configured to activate the service
+      cinderVolumes: 
+        ceph:
+          networkAttachments:
+            - storage
+          override:
+          containers:
+            cinder-volume:
+              livenessProbe:
+                initialDelaySeconds: 60
+                timeoutSeconds: 20
+                failureThreshold: 6
+                  #          customServiceConfig: |
+                  #            [DEFAULT]
+                  #            enabled_backends=ceph
+                  #            [ceph]
+                  #            volume_backend_name=ceph
+                  #            volume_driver=cinder.volume.drivers.rbd.RBDDriver
+                  #            rbd_ceph_conf=/etc/ceph/ceph.conf
+                  #            rbd_user=admin
+                  #            rbd_pool=volumes
+                  #            rbd_secret_uuid=2315763d-a0df-4c65-9fd7-3eaaba30b498
+        volume1:
+          networkAttachments: 
+          - storage
+          replicas: 0
+  nova: 
+    apiOverride: 
+      route: {}
+    template:
+      apiServiceTemplate:
+        replicas: 3
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 192.168.57.102
+              spec:
+                type: LoadBalancer
+      metadataServiceTemplate:
+        replicas: 3
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 192.168.57.103
+            spec:
+              type: LoadBalancer
+      schedulerServiceTemplate:
+        replicas: 3
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 192.168.57.104
+            spec:
+              type: LoadBalancer
+      cellTemplates:
+        cell0:
+          cellDatabaseAccount: nova-cell0
+          cellDatabaseInstance: openstack
+          cellMessageBusInstance: rabbitmq-cell0
+          hasAPIAccess: true
+        cell1:
+          cellDatabaseAccount: nova-cell1
+          cellDatabaseInstance: openstack-cell1
+          cellMessageBusInstance: rabbitmq-cell1
+          noVNCProxyServiceTemplate:
+            enabled: true
+            networkAttachments:
+            - ctlplane
+          hasAPIAccess: true
+            #          novaComputeTemplates:
+            #            default:
+            #              customServiceConfig: |
+            #                [DEFAULT]
+            #                compute_driver = libvirt.LibvirtDriver
+            #                [libvirt]
+            #                images_type=rbd
+            #                images_rbd_pool=vms
+            #                images_rbd_ceph_conf=/etc/ceph/ceph.conf
+            #                rbd_user=admin
+            #                rbd_secret_uuid=2315763d-a0df-4c65-9fd7-3eaaba30b498
+                #default:
+              #              customServiceConfig: |
+              #                [DEFAULT]
+              #                compute_driver = libvirt.LibvirtDriver
+              #                [libvirt]
+              #                images_type=rbd
+              #                images_rbd_pool=vms
+              #                images_rbd_ceph_conf=/etc/ceph/ceph.conf
+              #                rbd_user=admin
+              #                rbd_secret_uuid=2315763d-a0df-4c65-9fd7-3eaaba30b498  
+      secret: osp-secret
+  dns:
+    enabled: true
+    template:
+      options:
+      - key: server
+        values:
+        - 172.30.0.10
+      override:
+        service:
+          metadata:
+            annotations:
+              metallb.universe.tf/address-pool: ctlplane
+              metallb.universe.tf/allow-shared-ip: ctlplane
+              metallb.universe.tf/loadBalancerIPs: 192.168.58.101
+          spec:
+            type: LoadBalancer
+      replicas: 2
+  galera:
+    templates:
+      openstack:
+        storageRequest: 5000M
+        secret: osp-secret
+        replicas: 3
+      openstack-cell1:
+        storageRequest: 5000M
+        secret: osp-secret
+        replicas: 3
+  keystone:
+    apiOverride:
+      route: {}
+    template:
+      override:
+        service:
+          internal:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 192.168.57.105
+            spec:
+              type: LoadBalancer
+      databaseInstance: openstack
+      secret: osp-secret
+      replicas: 3
+  glance:
+    apiOverrides:
+      default:
+        route: {}
+    template:
+      #      customServiceConfig: |
+      #        [DEFAULT]
+      #        enabled_backends = default_backend:rbd
+      #        [glance_store]
+      #        default_backend = default_backend
+      #        [default_backend]
+      #        rbd_store_ceph_conf = /etc/ceph/ceph.conf
+      #        store_description = "Ceph RBD backend"
+      #        rbd_store_pool = images
+      #        rbd_store_user = admin
+      databaseInstance: openstack
+      databaseAccount: glance
+      secret: osp-secret
+      storage:
+        storageRequest: 10G
+      keystoneEndpoint: default
+      glanceAPIs:
+        default:
+          replicas: 0
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 192.168.57.106
+                spec:
+                  type: LoadBalancer
+          networkAttachments:
+          - storage
+  barbican:
+    enabled: true
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      secret: osp-secret
+      barbicanAPI:
+        replicas: 3
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 192.168.57.107
+              spec:
+                type: LoadBalancer
+      barbicanWorker:
+        replicas: 3
+      barbicanKeystoneListener:
+        replicas: 1
+  memcached:
+    templates:
+      memcached:
+         replicas: 3
+  neutron:
+    apiOverride:
+      route: {}
+    template:
+      replicas: 3
+      override:
+        service:
+          internal:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 192.168.57.108
+            spec:
+              type: LoadBalancer
+      databaseInstance: openstack
+      secret: osp-secret
+      networkAttachments:
+      - internalapi
+  swift:
+  enabled: true
+  proxyOverride:
+    route: {}
+  template:
+    swiftProxy:
+      networkAttachments:
+      - storage
+      override:
+        service:
+          internal:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 192.168.57.109
+            spec:
+              type: LoadBalancer
+          public: 
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: management
+                metallb.universe.tf/loadBalancerIPs: 192.168.56.109
+            spec:
+              type: LoadBalancer
+      replicas: 1
+    swiftRing:
+      ringReplicas: 1
+    swiftStorage:
+      networkAttachments:
+      - storage
+      replicas: 1
+      storageRequest: 10Gi
+  ovn:
+    template:
+      ovnDBCluster:
+        ovndbcluster-nb:
+          replicas: 3
+          dbType: NB
+          storageRequest: 10G
+          networkAttachment: internalapi
+        ovndbcluster-sb:
+          dbType: SB
+          storageRequest: 10G
+          networkAttachment: internalapi
+      ovnNorthd:
+        networkAttachment: internalapi
+  placement:
+    apiOverride:
+      route: {}
+    template:
+      override:
+        service:
+          internal:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 192.168.57.110
+            spec:
+              type: LoadBalancer
+      databaseInstance: openstack
+      replicas: 3
+      secret: osp-secret
+  rabbitmq: 
+    templates:
+      rabbitmq:
+        replicas: 3
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 192.168.57.111
+            spec:
+              type: LoadBalancer
+      rabbitmq-cell1:
+        replicas: 3
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 192.168.57.112
+            spec:
+              type: LoadBalancer
+  telemetry:
+  enabled: true
+  template:
+    metricStorage:
+      enabled: true
+      monitoringStack:
+        dashboardsEnabled: true
+        alertingEnabled: true
+        scrapeInterval: 30s
+        storage:
+          strategy: persistent
+          retention: 24h
+          persistent:
+            pvcStorageRequest: 20G
+    autoscaling:
+      enabled: false
+      aodh:
+        databaseAccount: aodh
+        databaseInstance: openstack
+        passwordSelector:
+          aodhService: AodhPassword
+        rabbitMqClusterName: rabbitmq
+        serviceUser: aodh
+        secret: osp-secret
+      heatInstance: heat
+    ceilometer:
+      enabled: true
+      secret: osp-secret
+    logging:
+      enabled: true
+    networkAttachments:
+      - internalapi
+      - management
+      - ctlplane
+    override:
+      service:
+        public:
+          metadata:
+            annotations:
+              metallb.universe.tf/address-pool: ctlplane
+              metallb.universe.tf/loadBalancerIPs: 192.168.58.110
+          spec:
+            type: LoadBalancer
+  horizon:
+    apiOverride: {}
+    enabled: true
+    template:
+      customServiceConfig: |
+        ALLOWED_HOSTS = ['10.130.0.32', 'horizon.openstack.svc', 'horizon.openstack.svc.cluster.local', '*']
+      memcachedInstance: memcached
+      networkAttachments:
+        - management
+      override:
+        service:
+          public:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: management
+                metallb.universe.tf/loadBalancerIPs: 192.168.56.110
+            spec:
+             type: LoadBalancer
+      preserveJobs: false
+      replicas: 2
+      resources: {}
+      secret: osp-secret
+      tls: {}
+  ironic:
+    enabled: false
+    template:
+      rpcTransport: oslo
+      databaseInstance: openstack
+      ironicAPI:
+        replicas:
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 192.168.57.114
+              spec:
+                type: LoadBalancer
+            public:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: ctlplane
+                  metallb.universe.tf/allow-shared-ip: ctlplane
+                  metallb.universe.tf/loadBalancerIPs: 192.168.58.114
+              spec:
+                type: LoadBalancer
+      ironicConductors:
+      - replicas: 1
+        storageRequest: 10G
+        networkAttachments:
+        - ocprovisioning
+        provisionNetwork: ocprovisioning
+        customServiceConfig: |
+          [neutron]
+          cleaning_network = baremetal
+          provisioning_network = baremetal
+          rescuing_network = baremetal
+      ironicInspector:
+        replicas: 0
+        networkAttachments:
+        - ocprovisioning
+        inspectionNetwork: ocprovisioning
+      ironicNeutronAgent:
+        replicas: 1
+      secret: osp-secret
