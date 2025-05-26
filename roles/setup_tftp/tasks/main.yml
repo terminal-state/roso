@@ -42,10 +42,3 @@
     enabled: true
     state: started
   become: yes
-
-- name: Ensure tftp service is enabled (optional)
-  systemd:
-    name: tftp.service
-    enabled: true
-    state: started
-  become: yes
