@@ -53,8 +53,8 @@ spec:
           - storagemgmt
         edpm_network_config_os_net_config_options: "--cleanup"
         edpm_network_config_nmstate: false
-        registry_username: "rh-ee-sryan"
-        registry_password: "Spread9220noise!"
+        registry_username: "<USERNAME>"
+        registry_password: "<PASSWORD>"
         edpm_bootstrap_command: |
           podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io
           echo "podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io"
