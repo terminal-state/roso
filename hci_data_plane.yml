@@ -1,0 +1,62 @@
+hosts:
+  - name: mbes005
+    mac_address: "5c:ba:2c:8c:f3:00"
+    ip_address: "192.168.56.25"
+    storage_ip_address: "192.168.59.25"
+    storagemgmt_ip_address: "192.168.61.25"
+    tenant_ip_address: "192.168.60.202"
+    ctlplane_ip_address: "192.168.58.25"
+    internal_ip_address: "192.168.57.220"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      #      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+  - name: mbes006
+    mac_address: "5c:ba:2c:8c:f7:00"
+    ip_address: "192.168.56.26"
+    storage_ip_address: "192.168.59.26"
+    storagemgmt_ip_address: "192.168.61.26"
+    tenant_ip_address: "192.168.60.26"
+    ctlplane_ip_address: "192.168.58.26"
+    internal_ip_address: "192.168.57.26"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+  - name: mbes007
+    mac_address: "5c:ba:2c:8d:05:d0"
+    ip_address: "192.168.56.27"
+    storage_ip_address: "192.168.59.27"
+    storagemgmt_ip_address: "192.168.61.27"
+    tenant_ip_address: "192.168.60.27"
+    ctlplane_ip_address: "192.168.58.27"
+    internal_ip_address: "192.168.57.27"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+storagemgmt_admin_password: admin
