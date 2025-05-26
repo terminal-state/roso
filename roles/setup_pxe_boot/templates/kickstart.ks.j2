@@ -126,15 +126,6 @@ EOF
 # Reload NetworkManager to apply unmanaged setting
 systemctl reload NetworkManager
 
-# DNS Workaround
-cat <<EOF >> /etc/hosts
-52.2.169.250    registry.redhat.io
-95.100.104.14	access.redhat.com
-35.173.153.15	quay.io
-2.19.117.103	cdn01.quay.io
-EOF
-
-
 # Create the .ssh directory for root and set permissions
 mkdir -p /root/.ssh
 chmod 700 /root/.ssh
