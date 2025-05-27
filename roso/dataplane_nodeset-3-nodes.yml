@@ -20,7 +20,7 @@ spec:
     extraMounts:
       - volumes:
           - name: nova-migration-key
-            secrets:
+            secret:
               secretName: nova-migration-ssh-key
         mounts:
           - name: nova-migration-ssh-key

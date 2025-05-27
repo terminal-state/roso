@@ -120,7 +120,7 @@ spec:
         volume1:
           networkAttachments: 
           - storage
-          replicas: 0
+          replicas: 1
   nova: 
     apiOverride: 
       route: {}
