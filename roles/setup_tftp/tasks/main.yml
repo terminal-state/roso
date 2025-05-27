@@ -37,7 +37,7 @@
 #    immediate: true
 
 - name: Ensure tftp.socket is enabled and started
-  systemd:
+  service:
     name: tftp.socket
     enabled: true
     state: started
