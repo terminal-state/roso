@@ -53,6 +53,7 @@ spec:
           - storagemgmt
         edpm_network_config_os_net_config_options: "--cleanup"
         edpm_bootstrap_command: |
+            podman login -u {{ registry_username }} -p {{ registry_password }} registry.redhat.io
         edpm_bootstrap_network_resolvconf_update: true
         ctlplane_dns_nameservers:
           - 192.168.58.101
