@@ -117,7 +117,7 @@ spec:
             rbd_user=admin
             rbd_pool=volumes
             rbd_secret_uuid=<UUID>
-        volume1:
+        #volume1:
           networkAttachments: 
           - storage
           replicas: 1
