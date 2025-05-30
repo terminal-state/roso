@@ -13,4 +13,4 @@ data:
   images_rbd_glance_copy_poll_interval=15
   images_rbd_glance_copy_timeout=600
   rbd_user=admin
-  rbd_secret_uuid=b7c96985-5432-4700-83d0-79584c47f462
+  rbd_secret_uuid=<UUID>
