@@ -5,9 +5,6 @@
   ansible.builtin.yum:
     name: dhcp-server
     state: present
-  async: 600
-  poll: 0
-  register: yum_async_result
 
 - name: Configure the DHCP server
   ansible.builtin.template:
@@ -30,11 +27,3 @@
     name: dhcpd
     state: restarted
   become: true
-
-- name: Wait for package installation to complete
-  ansible.builtin.async_status:
-    jid: "{{ yum_async_result.ansible_job_id }}"
-  register: yum_async_status
-  until: yum_async_status.finished
-  retries: 100
-  delay: 3 
