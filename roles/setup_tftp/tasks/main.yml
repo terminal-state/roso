@@ -4,9 +4,6 @@
   yum:
     name: tftp-server
     state: present
-  async: 300
-  poll: 0
-  become: yes
 
 - name: Create TFTP root directory
   file:
