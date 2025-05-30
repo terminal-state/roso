@@ -40,7 +40,7 @@ spec:
       ansibleUser: root
       ansibleVarsFrom:
         - secretRef:
-            name: redhat-registry
+            name: redhat-registry-secret
       ansibleVars:
         ctlplane_dns_nameservers:
           - 192.168.58.101
