@@ -116,7 +116,7 @@ spec:
             rbd_ceph_conf=/etc/ceph/ceph.conf
             rbd_user=admin
             rbd_pool=volumes
-            rbd_secret_uuid=b7c96985-5432-4700-83d0-79584c47f462
+            rbd_secret_uuid=<UUID>
         volume1:
           networkAttachments: 
           - storage
@@ -184,7 +184,7 @@ spec:
             #                images_rbd_pool=vms
             #                images_rbd_ceph_conf=/etc/ceph/ceph.conf
             #                rbd_user=admin
-            #                rbd_secret_uuid=b7c96985-5432-4700-83d0-79584c47f462
+            #                rbd_secret_uuid=<UUID>
       secret: osp-secret
   dns:
     enabled: true
