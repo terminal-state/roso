@@ -85,6 +85,6 @@ routes:
 dns-resolver:
   config:
     server:
-      - 192.168.56.21
+      - 8.8.8.8
     search:
       - imlab.priv
