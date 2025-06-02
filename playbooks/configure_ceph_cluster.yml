@@ -1,7 +1,5 @@
 - name: Configure the Ceph Cluster
   hosts: hci_data_plane3
-  vars_files:
-    - /etc/ansible/inventory/group_vars/registry-vars.yml
   roles:
     - setup_ceph_orchestrator
     - setup_ceph_nodes
