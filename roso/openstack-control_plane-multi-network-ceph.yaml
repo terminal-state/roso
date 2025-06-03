@@ -114,7 +114,7 @@ spec:
             volume_backend_name=ceph
             volume_driver=cinder.volume.drivers.rbd.RBDDriver
             rbd_ceph_conf=/etc/ceph/ceph.conf
-            rbd_user=admin
+            rbd_user=openstack
             rbd_pool=volumes
             rbd_secret_uuid=<UUID>
         #volume1:
@@ -183,7 +183,7 @@ spec:
             #                images_type=rbd
             #                images_rbd_pool=vms
             #                images_rbd_ceph_conf=/etc/ceph/ceph.conf
-            #                rbd_user=admin
+            #                rbd_user=openstack
             #                rbd_secret_uuid=<UUID>
       secret: osp-secret
   dns:
@@ -244,7 +244,7 @@ spec:
         rbd_store_ceph_conf = /etc/ceph/ceph.conf
         store_description = "Ceph RBD backend"
         rbd_store_pool = images
-        rbd_store_user = admin
+        rbd_store_user = openstack
       databaseInstance: openstack
       databaseAccount: glance
       secret: osp-secret
