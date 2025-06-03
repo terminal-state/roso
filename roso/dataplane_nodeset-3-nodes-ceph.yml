@@ -266,7 +266,6 @@ spec:
   - install-certs
   - ceph-client
   - ovn
-  - neutron-ovn-agent
   - neutron-metadata
   - libvirt
   - nova-custom-ceph
