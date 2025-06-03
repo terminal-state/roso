@@ -18,6 +18,14 @@ spec:
     #- storagemgmt
   nodeTemplate:
     extraMounts:
+      - extraVolType: Logs
+        volumes:
+        - name: ansible-logs
+          persistentVolumeClaim:
+            claimName: ansible-logs
+        mounts:
+        - name: ansible-logs
+          mountPath: "/runner/artifacts"
       - volumes:
           - name: nova-migration-key
             secret:
