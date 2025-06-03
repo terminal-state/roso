@@ -12,5 +12,5 @@ data:
   images_rbd_glance_store_name=default_backend
   images_rbd_glance_copy_poll_interval=15
   images_rbd_glance_copy_timeout=600
-  rbd_user=admin
+  rbd_user=openstack
   rbd_secret_uuid=<UUID>
