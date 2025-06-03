@@ -286,6 +286,7 @@ spec:
   - reboot-os
   - install-certs
   - ovn
+  - neutron-ovn-agent
   - neutron-metadata
   - libvirt
   - nova
