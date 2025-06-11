@@ -5,8 +5,8 @@ metadata:
   namespace: openstack
 spec:
   configMaps:
-  - reserved-memory-nova
-  - ceph-nova
+  #- reserved-memory-nova
+  #- ceph-nova
   env:
   - name: ANSIBLE_FORCE_COLOR
     value: "True"
