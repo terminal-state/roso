@@ -81,7 +81,7 @@ hosts:
       - /dev/sdh
   - name: mbes009
     mac_address: "5c:ba:2c:8d:92:f0"
-    ip_address: "192.168.56.27"
+    ip_address: "192.168.56.29"
     storage_ip_address: "192.168.59.29"
     storagemgmt_ip_address: "192.168.61.29"
     tenant_ip_address: "192.168.60.29"
