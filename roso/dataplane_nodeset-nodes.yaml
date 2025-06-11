@@ -272,6 +272,162 @@ spec:
         ansibleUser: root
         ansibleVars:
           fqdn_internal_api: mbes007.imlab.priv
+      edpm-compute-3:
+      hostName: edpm-compute-3
+      networks:
+      - name: external
+        fixedIP: 192.168.56.28
+        subnetName: subnet1
+      - name: ctlplane
+        subnetName: subnet1
+        fixedIP: 192.168.58.28
+      - name: internalapi
+        subnetName: subnet1
+        fixedIP: 192.168.57.28
+      - name: storage
+        subnetName: subnet1
+        fixedIP: 192.168.59.28
+      - name: tenant
+        subnetName: subnet1
+        fixedIP: 192.168.60.28
+      - name: storagemgmt
+        subnetName: subnet1
+        fixedIP: 192.168.61.28
+      ansible:
+        ansibleHost: 192.168.56.28
+        ansibleUser: root
+        ansibleVars:
+          fqdn_internal_api: mbes008.imlab.priv
+    edpm-compute-4:
+      hostName: edpm-compute-4
+      networks:
+      - name: external
+        fixedIP: 192.168.56.29
+        subnetName: subnet1
+      - name: ctlplane
+        fixedIP: 192.168.58.29
+        subnetName: subnet1
+      - name: internalapi
+        fixedIP: 192.168.57.29
+        subnetName: subnet1
+      - name: storage
+        fixedIP: 192.168.59.29
+        subnetName: subnet1
+      - name: tenant
+        fixedIP: 192.168.60.29
+        subnetName: subnet1
+      - name: storagemgmt
+        fixedIP: 192.168.61.29
+        subnetName: subnet1
+      ansible:
+        ansibleHost: 192.168.56.29
+        ansibleUser: root
+        ansibleVars:
+          fqdn_internal_api: mbes009.imlab.priv
+    edpm-compute-5:
+      hostName: edpm-compute-5
+      networks:
+      - name: external
+        fixedIP: 192.168.56.30
+        subnetName: subnet1
+      - name: ctlplane
+        fixedIP: 192.168.58.30
+        subnetName: subnet1
+      - name: internalapi
+        fixedIP: 192.168.57.30
+        subnetName: subnet1
+      - name: storage
+        fixedIP: 192.168.59.30
+        subnetName: subnet1
+      - name: tenant
+        fixedIP: 192.168.60.30
+        subnetName: subnet1
+      - name: storagemgmt
+        fixedIP: 192.168.61.30
+        subnetName: subnet1
+      ansible:
+        ansibleHost: 192.168.56.30
+        ansibleUser: root
+        ansibleVars:
+          fqdn_internal_api: mbes010.imlab.priv
+    edpm-compute-6:
+      hostName: edpm-compute-6
+      networks:
+      - name: external
+        fixedIP: 192.168.56.31
+        subnetName: subnet1
+      - name: ctlplane
+        subnetName: subnet1
+        fixedIP: 192.168.58.31
+      - name: internalapi
+        subnetName: subnet1
+        fixedIP: 192.168.57.31
+      - name: storage
+        subnetName: subnet1
+        fixedIP: 192.168.59.31
+      - name: tenant
+        subnetName: subnet1
+        fixedIP: 192.168.60.31
+      - name: storagemgmt
+        subnetName: subnet1
+        fixedIP: 192.168.61.31
+      ansible:
+        ansibleHost: 192.168.56.31
+        ansibleUser: root
+        ansibleVars:
+          fqdn_internal_api: mbes011.imlab.priv
+    edpm-compute-7:
+      hostName: edpm-compute-7
+      networks:
+      - name: external
+        fixedIP: 192.168.56.32
+        subnetName: subnet1
+      - name: ctlplane
+        fixedIP: 192.168.58.32
+        subnetName: subnet1
+      - name: internalapi
+        fixedIP: 192.168.57.32
+        subnetName: subnet1
+      - name: storage
+        fixedIP: 192.168.59.32
+        subnetName: subnet1
+      - name: tenant
+        fixedIP: 192.168.60.32
+        subnetName: subnet1
+      - name: storagemgmt
+        fixedIP: 192.168.61.32
+        subnetName: subnet1
+      ansible:
+        ansibleHost: 192.168.56.32
+        ansibleUser: root
+        ansibleVars:
+          fqdn_internal_api: mbes012.imlab.priv
+    edpm-compute-8:
+      hostName: edpm-compute-8
+      networks:
+      - name: external
+        fixedIP: 192.168.56.33
+        subnetName: subnet1
+      - name: ctlplane
+        fixedIP: 192.168.58.33
+        subnetName: subnet1
+      - name: internalapi
+        fixedIP: 192.168.57.33
+        subnetName: subnet1
+      - name: storage
+        fixedIP: 192.168.59.33
+        subnetName: subnet1
+      - name: tenant
+        fixedIP: 192.168.60.33
+        subnetName: subnet1
+      - name: storagemgmt
+        fixedIP: 192.168.61.33
+        subnetName: subnet1
+      ansible:
+        ansibleHost: 192.168.56.33
+        ansibleUser: root
+        ansibleVars:
+          fqdn_internal_api: mbes013.imlab.priv
   preProvisioned: true
   services:
   - bootstrap
