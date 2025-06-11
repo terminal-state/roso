@@ -1,5 +1,5 @@
 - name: Clean Ceph OSD Disks for Matching Host
-  hosts: hci_data_plane3
+  hosts: hci_data_plane
   become: true
   tasks:
 
