@@ -270,7 +270,7 @@ spec:
         ansibleUser: root
         ansibleVars:
           fqdn_internal_api: mbes007.imlab.priv
-      edpm-compute-3:
+    edpm-compute-3:
       hostName: edpm-compute-3
       networks:
       - name: external
