@@ -1,5 +1,5 @@
 - name: Configure the Ceph Cluster
-  hosts: hci_data_plane3
+  hosts: hci_data_plane
   roles:
     - setup_ceph_orchestrator
     - setup_ceph_nodes
