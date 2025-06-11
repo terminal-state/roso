@@ -102,6 +102,24 @@ spec:
           edpm-compute-2:
             nic1: 5c:ba:2c:8d:05:d0
             nic2: 5c:ba:2c:8d:05:d8
+          edpm-compute-3:
+            nic1: 5c:ba:2c:8d:03:80
+            nic2: 5c:ba:2c:8d:03:88
+          edpm-compute-4:
+            nic1: 5c:ba:2c:8d:92:f0
+            nic2: 5c:ba:2c:8d:92:f8
+          edpm-compute-5:
+            nic1: 5c:ba:2c:8d:00:90
+            nic2: 5c:ba:2c:8d:00:98
+          edpm-compute-6:
+            nic1: 5c:ba:2c:8c:f1:a0
+            nic2: 5c:ba:2c:8c:f1:a8
+          edpm-compute-7:
+            nic1: 5c:ba:2c:8d:05:80
+            nic2: 5c:ba:2c:8d:05:88
+          edpm-compute-8:
+            nic1: 5c:ba:2c:8d:8e:c0
+            nic2: 5c:ba:2c:8d:8e:c8
         edpm_network_config_template: |
           ---
           {% set mtu_list = [ctlplane_mtu] %}
