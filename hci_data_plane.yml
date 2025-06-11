@@ -11,7 +11,7 @@ hosts:
       - nvme0n1
       - nvme1n1
     osds:
-      #      - /dev/sda
+      - /dev/sda
       - /dev/sdb
       - /dev/sdc
       - /dev/sdd
@@ -47,6 +47,126 @@ hosts:
     tenant_ip_address: "192.168.60.27"
     ctlplane_ip_address: "192.168.58.27"
     internal_ip_address: "192.168.57.27"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+  - name: mbes008
+    mac_address: "5c:ba:2c:8d:03:80"
+    ip_address: "192.168.56.28"
+    storage_ip_address: "192.168.59.28"
+    storagemgmt_ip_address: "192.168.61.28"
+    tenant_ip_address: "192.168.60.28"
+    ctlplane_ip_address: "192.168.58.28"
+    internal_ip_address: "192.168.57.28"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+  - name: mbes009
+    mac_address: "5c:ba:2c:8d:92:f0"
+    ip_address: "192.168.56.27"
+    storage_ip_address: "192.168.59.29"
+    storagemgmt_ip_address: "192.168.61.29"
+    tenant_ip_address: "192.168.60.29"
+    ctlplane_ip_address: "192.168.58.29"
+    internal_ip_address: "192.168.57.29"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+  - name: mbes010
+    mac_address: "5c:ba:2c:8d:00:90"
+    ip_address: "192.168.56.30"
+    storage_ip_address: "192.168.59.30"
+    storagemgmt_ip_address: "192.168.61.30"
+    tenant_ip_address: "192.168.60.30"
+    ctlplane_ip_address: "192.168.58.30"
+    internal_ip_address: "192.168.57.30"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+  - name: mbes011
+    mac_address: "5c:ba:2c:8c:f1:a0"
+    ip_address: "192.168.56.31"
+    storage_ip_address: "192.168.59.31"
+    storagemgmt_ip_address: "192.168.61.31"
+    tenant_ip_address: "192.168.60.31"
+    ctlplane_ip_address: "192.168.58.31"
+    internal_ip_address: "192.168.57.31"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+  - name: mbes012
+    mac_address: "5c:ba:2c:8d:05:80"
+    ip_address: "192.168.56.32"
+    storage_ip_address: "192.168.59.32"
+    storagemgmt_ip_address: "192.168.61.32"
+    tenant_ip_address: "192.168.60.32"
+    ctlplane_ip_address: "192.168.58.32"
+    internal_ip_address: "192.168.57.32"
+    mirrored_drives:
+      - nvme0n1
+      - nvme1n1
+    osds:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+      - /dev/sdh
+  - name: mbes013
+    mac_address: "5c:ba:2c:8d:8e:c0"
+    ip_address: "192.168.56.33"
+    storage_ip_address: "192.168.59.33"
+    storagemgmt_ip_address: "192.168.61.33"
+    tenant_ip_address: "192.168.60.33"
+    ctlplane_ip_address: "192.168.58.33"
+    internal_ip_address: "192.168.57.33"
     mirrored_drives:
       - nvme0n1
       - nvme1n1
