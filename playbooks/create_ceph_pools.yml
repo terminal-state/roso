@@ -84,3 +84,14 @@
       command: ceph osd pool set volumes_snap crush_rule hdd_rule
       when: hdd_osds_list | length > 0
 
+    - name: Add application to pools
+      command: ceph osd pool application enable {{ item }} rbd
+      when: hdd_osds_list | length > 0
+      loop:
+        - volumes
+        - images
+        - ssd_pool
+        - volumes_snap
+        - vms
+      
+
