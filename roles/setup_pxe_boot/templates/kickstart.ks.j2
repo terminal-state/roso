@@ -99,7 +99,7 @@ volgroup {{ vg_name }} pv.01
 # Create Logical Volumes
 logvol /home --fstype=xfs --name=home --vgname=vg01 --size=20480
 logvol /usr  --fstype=xfs --name=usr --vgname=vg01 --size=10240
-logvol /var  --fstype=xfs --name=var --vgname=vg01 --size=10240
+logvol /var  --fstype=xfs --name=var --vgname=vg01 --size=102400
 logvol /var/log  --fstype=xfs --name=var_log --vgname=vg01 --size=10240
 logvol /tmp  --fstype=xfs --name=tmp --vgname=vg01 --size=5120
 
