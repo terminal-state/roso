@@ -100,7 +100,7 @@ OADP (OpenShift API for Data Protection) is the Red Hat-supported backup and res
 built on Velero. It must be installed before any backup can be taken.
 
 ```bash
-cat > /home/ansible/OCP-TEST/oadp-install.yaml <<'EOF'
+cat > oadp-install.yaml <<'EOF'
 ---
 apiVersion: v1
 kind: Namespace
@@ -131,7 +131,7 @@ spec:
   installPlanApproval: Automatic
 EOF
 
-oc apply -f /home/ansible/OCP-TEST/oadp-install.yaml
+oc apply -f oadp-install.yaml
 ```
 
 **Verify the operator is ready before continuing:**
@@ -155,8 +155,8 @@ that matches your environment.
 **Create the storage credentials secret first:**
 
 ```bash
-# Replace with your actual access key and secret
-cat > /home/ansible/OCP-TEST/oadp-credentials.yaml <<'EOF'
+# Replace with actual access key and secret
+cat > oadp-credentials.yaml <<'EOF'
 apiVersion: v1
 kind: Secret
 metadata:
@@ -169,15 +169,15 @@ stringData:
     aws_secret_access_key=<your-secret-key>
 EOF
 
-oc apply -f /home/ansible/OCP-TEST/oadp-credentials.yaml
+oc apply -f oadp-credentials.yaml
 ```
 
 **Create the DataProtectionApplication CR:**
 
-> Choose the config block that matches your storage backend. Remove the unused options.
+> Choose the config block that matches the storage backend. Remove the unused options.
 
 ```bash
-cat > /home/ansible/OCP-TEST/oadp-dpa.yaml <<'EOF'
+cat > oadp-dpa.yaml <<'EOF'
 ---
 apiVersion: oadp.openshift.io/v1alpha1
 kind: DataProtectionApplication
@@ -213,7 +213,7 @@ spec:
           key: cloud
 EOF
 
-oc apply -f /home/ansible/OCP-TEST/oadp-dpa.yaml
+oc apply -f oadp-dpa.yaml
 ```
 
 **Verify OADP is fully operational:**
@@ -251,7 +251,7 @@ This backup captures the complete state of RHOSO:
 > independent of the namespace), running instance state (survives in libvirt regardless).
 
 ```bash
-cat > /home/ansible/OCP-TEST/openstack-backup-pre-upgrade.yaml <<'EOF'
+cat > openstack-backup-pre-upgrade.yaml <<'EOF'
 ---
 apiVersion: velero.io/v1
 kind: Backup
@@ -275,7 +275,7 @@ spec:
     - events
 EOF
 
-oc apply -f /home/ansible/OCP-TEST/openstack-backup-pre-upgrade.yaml
+oc apply -f openstack-backup-pre-upgrade.yaml
 ```
 
 **Monitor the backup to completion:**
@@ -321,7 +321,7 @@ Automated daily backups ensure you always have a recent restore point — not ju
 pre-upgrade snapshot.
 
 ```bash
-cat > /home/ansible/OCP-TEST/openstack-backup-schedule.yaml <<'EOF'
+cat > openstack-backup-schedule.yaml <<'EOF'
 ---
 apiVersion: velero.io/v1
 kind: Schedule
@@ -345,7 +345,7 @@ spec:
       - events
 EOF
 
-oc apply -f /home/ansible/OCP-TEST/openstack-backup-schedule.yaml
+oc apply -f openstack-backup-schedule.yaml
 ```
 
 **Verify schedule and trigger a test run immediately:**
