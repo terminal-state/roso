@@ -1,8 +1,4 @@
 # RHOSO + OCP Upgrade Runbook
-**Cluster:** https://api.ocp-upgrade.cluster.test:6443  
-**Logged in as:** kube:admin  
-**Date started:** 2026-06-22  
-**Author:** scottlryan@gmail.com
 
 ---
 
